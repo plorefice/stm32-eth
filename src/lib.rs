@@ -20,7 +20,7 @@ pub use tx::{TxDescriptor, TxError};
 use tx::{TxRing, TxRingEntry};
 mod setup;
 pub use setup::setup;
-#[cfg(feature = "nucleo-f429zi")]
+#[cfg(any(feature = "nucleo-f429zi", feature = "stm32f4disco"))]
 pub use setup::setup_pins;
 
 #[cfg(feature = "smoltcp-phy")]

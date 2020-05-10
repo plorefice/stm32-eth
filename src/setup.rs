@@ -6,6 +6,13 @@ use stm32f4xx_hal::gpio::{
     gpiog::{PG11, PG13},
     Speed::VeryHigh,
 };
+#[cfg(feature = "stm32f4disco")]
+use stm32f4xx_hal::gpio::{
+    gpioa::{PA1, PA2, PA7},
+    gpiob::{PB11, PB12, PB13},
+    gpioc::{PC1, PC4, PC5},
+    Speed::VeryHigh,
+};
 use stm32f4xx_hal::stm32::{RCC, SYSCFG};
 
 /// Initialize GPIO pins. Enable syscfg and ethernet clocks. Reset the
@@ -76,5 +83,46 @@ pub fn setup_pins<M1, M2, M3, M4, M5, M6, M7, M8, M9>(
     // PG13 RXII TXD0 - SB182 ON
     pg13.into_alternate_af11().set_speed(VeryHigh);
     // PB13 RMII TXD1 I2S_A_CK JP7 ON
+    pb13.into_alternate_af11().set_speed(VeryHigh);
+}
+
+/// Pin setup for the **STM32F4DISCO** dev board
+/// (feature: `stm32f4disco`)
+///
+/// Set RMII pins to
+/// * Alternate function 11
+/// * High-speed
+///
+/// This function consumes the pins so that you cannot use them
+/// anywhere else by accident.
+#[cfg(feature = "stm32f4disco")]
+pub fn setup_pins<M1, M2, M3, M4, M5, M6, M7, M8, M9>(
+    pa1: PA1<M1>,
+    pa2: PA2<M2>,
+    pa7: PA7<M3>,
+    pb11: PB11<M4>,
+    pb12: PB12<M5>,
+    pb13: PB13<M6>,
+    pc1: PC1<M7>,
+    pc4: PC4<M8>,
+    pc5: PC5<M9>,
+) {
+    // PA1 RMII Reference Clock
+    pa1.into_alternate_af11().set_speed(VeryHigh);
+    // PA2 RMII MDIO
+    pa2.into_alternate_af11().set_speed(VeryHigh);
+    // PC1 RMII MDC
+    pc1.into_alternate_af11().set_speed(VeryHigh);
+    // PA7 RMII RX Data Valid
+    pa7.into_alternate_af11().set_speed(VeryHigh);
+    // PC4 RMII RXD0
+    pc4.into_alternate_af11().set_speed(VeryHigh);
+    // PC5 RMII RXD1
+    pc5.into_alternate_af11().set_speed(VeryHigh);
+    // PB11 RMII TX Enable
+    pb11.into_alternate_af11().set_speed(VeryHigh);
+    // PB12 RXII TXD0
+    pb12.into_alternate_af11().set_speed(VeryHigh);
+    // PB13 RMII TXD1
     pb13.into_alternate_af11().set_speed(VeryHigh);
 }
