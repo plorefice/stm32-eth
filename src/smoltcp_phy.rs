@@ -5,33 +5,29 @@ use smoltcp::time::Instant;
 use smoltcp::Error;
 
 /// Use this Ethernet driver with [smoltcp](https://github.com/m-labs/smoltcp)
-impl<'a, 'rx, 'tx, 'b> Device<'a> for &'b mut Eth<'rx, 'tx> {
+impl<'a, 'rx, 'tx> Device<'a> for Eth<'rx, 'tx> {
     type RxToken = EthRxToken<'a>;
     type TxToken = EthTxToken<'a>;
 
     fn capabilities(&self) -> DeviceCapabilities {
-        DeviceCapabilities::default()
+        let mut caps = DeviceCapabilities::default();
+        caps.max_transmission_unit = crate::MTU;
+        caps
     }
 
-    fn receive(&mut self) -> Option<(Self::RxToken, Self::TxToken)> {
-        let self_ = unsafe {
-            // HACK: eliminate lifetimes
-            transmute::<&mut Eth<'rx, 'tx>, &mut Eth<'a, 'a>>(*self)
+    fn receive(&'a mut self) -> Option<(Self::RxToken, Self::TxToken)> {
+        let eth = unsafe { transmute::<&mut Eth<'rx, 'tx>, &mut Eth<'a, 'a>>(self) };
+
+        let tx = EthTxToken { eth };
+        let rx = match eth.recv_next() {
+            Ok(packet) => EthRxToken { packet },
+            Err(_) => return None,
         };
-        let eth = self_ as *mut Eth<'a, 'a>;
-        match self_.recv_next() {
-            Ok(packet) => {
-                let rx = EthRxToken { packet };
-                let tx = EthTxToken { eth };
-                Some((rx, tx))
-            }
-            Err(_) => None,
-        }
+        Some((rx, tx))
     }
 
-    fn transmit(&mut self) -> Option<Self::TxToken> {
-        let eth =
-            unsafe { transmute::<&mut Eth<'rx, 'tx>, &mut Eth<'a, 'a>>(*self) as *mut Eth<'a, 'a> };
+    fn transmit(&'a mut self) -> Option<Self::TxToken> {
+        let eth = unsafe { transmute::<&mut Eth<'rx, 'tx>, &mut Eth<'a, 'a>>(self) };
         Some(EthTxToken { eth })
     }
 }
